@@ -28,18 +28,44 @@ mod ppm {
 
 use v3::V3;
 
-fn main() {
-    //let width = 300;
-    //let height = 200;
-    //ppm::write(&width, &height, &"img0");
-
+fn test_v3() {
     let v: V3<i32> = V3 { x: 2, y: 3, z: 6 };
     let c: i32 = 5;
+    println!("v = {:?}", v);
 
     let y = v * c;
-    println!("y = {:?}", y);
+    println!("v * c = y = {:?}", y);
+
     let t = V3 { x: 1, y: 1, z: 1 };
-    let u = y + t;
+    let mut u = y + t;
     println!("u = y + t = {:?}", u);
-    println!("u = ({}, {}, {})", u[0], u[1], u[3]);
+
+    println!("indices u = ({}, {}, {})", u[0], u[1], u[2]);
+
+    println!("checking index mut");
+    u[0] = 300;
+    println!(
+        "assign 300 to first yield: u = ({}, {}, {})",
+        u[0], u[1], u[2]
+    );
+
+    println!("division by {}", 5);
+    let ud5 = u / 5;
+    let mut c = V3 { x: 5, y: 10, z: 15 };
+    c /= 5;
+    println!(
+        "div: u = ({}, {}, {}); div assign: u = ({}, {}, {})",
+        ud5[0], ud5[1], ud5[2], c[0], c[1], c[2]
+    );
+}
+
+fn test_ppm() {
+    let width = 300;
+    let height = 200;
+    ppm::write(&width, &height, &"img0");
+}
+
+fn main() {
+    test_ppm();
+    test_v3();
 }
