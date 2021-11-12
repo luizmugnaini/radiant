@@ -1,11 +1,11 @@
-use std::fmt::{self, Display, Write};
+use std::fmt::{self, Display};
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign};
 
 #[derive(Debug)]
 pub struct Color {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
 }
 
 /// Add vectors
@@ -34,10 +34,10 @@ impl AddAssign for Color {
 
 /// Multiply by scalar
 /// Notice that `v` * `c` is allowed but `c` * `v` is not
-impl Mul<u8> for Color {
+impl Mul<f32> for Color {
     type Output = Self;
 
-    fn mul(self, c: u8) -> Self {
+    fn mul(self, c: f32) -> Self {
         Self {
             r: c * self.r,
             g: c * self.g,
@@ -47,8 +47,8 @@ impl Mul<u8> for Color {
 }
 
 /// Multiply assign with *=
-impl MulAssign<u8> for Color {
-    fn mul_assign(&mut self, c: u8) {
+impl MulAssign<f32> for Color {
+    fn mul_assign(&mut self, c: f32) {
         *self = Self {
             r: c * self.r,
             g: c * self.g,
@@ -57,10 +57,10 @@ impl MulAssign<u8> for Color {
     }
 }
 
-impl Div<u8> for Color {
+impl Div<f32> for Color {
     type Output = Color;
 
-    fn div(self, d: u8) -> Self {
+    fn div(self, d: f32) -> Self {
         Self {
             r: self.r / d,
             g: self.g / d,
@@ -69,8 +69,8 @@ impl Div<u8> for Color {
     }
 }
 
-impl DivAssign<u8> for Color {
-    fn div_assign(&mut self, d: u8) {
+impl DivAssign<f32> for Color {
+    fn div_assign(&mut self, d: f32) {
         *self = Self {
             r: self.r / d,
             g: self.g / d,
@@ -86,9 +86,9 @@ pub enum RGB {
 }
 
 impl Index<RGB> for Color {
-    type Output = u8;
+    type Output = f32;
 
-    fn index(&self, index: RGB) -> &u8 {
+    fn index(&self, index: RGB) -> &f32 {
         match index {
             RGB::Red => &self.r,
             RGB::Green => &self.g,
@@ -98,7 +98,7 @@ impl Index<RGB> for Color {
 }
 
 impl IndexMut<RGB> for Color {
-    fn index_mut(&mut self, index: RGB) -> &mut u8 {
+    fn index_mut(&mut self, index: RGB) -> &mut f32 {
         match index {
             RGB::Red => &mut self.r,
             RGB::Green => &mut self.g,
@@ -114,19 +114,16 @@ impl Display for Color {
 }
 
 impl Color {
-    pub fn new(r: u8, g: u8, b: u8) -> Color {
+    pub fn new(r: f32, g: f32, b: f32) -> Color {
         Color { r, g, b }
     }
 
     pub fn write_color(&self) {
-        println!("{} {} {}\n", self.r, self.g, self.b)
-    }
-
-    pub fn to_rgb(r: f32, g: f32, b: f32) -> Color {
-        Color {
-            r: (255.999 * r) as u8,
-            g: (255.999 * g) as u8,
-            b: (255.999 * b) as u8,
-        }
+        println!(
+            "{} {} {}\n",
+            (255.999 * self.r) as u8,
+            (255.999 * self.g) as u8,
+            (255.999 * self.b) as u8
+        )
     }
 }
