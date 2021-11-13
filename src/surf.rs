@@ -27,12 +27,12 @@ impl Surface for Sphere {
             half_b * half_b - a * c
         };
 
-        // TODO: this is not a really beautiful code
-        // refactor this into something better
         if discriminant < 0.0 {
             false
         } else {
             let sqrtd = discriminant.sqrt();
+
+            // nearest root within the parameters
             let root: Option<f32> = {
                 let r1 = (-half_b - sqrtd) / a;
                 if r1 < t_min || t_max < r1 {
