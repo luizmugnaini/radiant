@@ -1,6 +1,6 @@
 mod color;
 mod ray;
-mod render;
+mod surf;
 mod vec3;
 
 use color::Color;
@@ -10,15 +10,16 @@ use vec3::Vec3;
 fn hit_sphere(center: &Vec3<f32>, radius: f32, ray: &Ray<f32>) -> f32 {
     let oc: Vec3<f32> = ray.origin - *center;
     let a = ray.dir.dot(&ray.dir);
-    let b = 2.0 * oc.dot(&ray.dir);
+    let half_b = oc.dot(&ray.dir);
     let discriminant = {
         let c = oc.dot(&oc) - radius * radius;
-        b * b - 4.0 * a * c
+        half_b * half_b - a * c
     };
+
     if discriminant < 0.0 {
         -1.0
     } else {
-        (-b - discriminant.sqrt()) / (2.0 * a)
+        (-half_b - discriminant.sqrt()) / a
     }
 }
 
