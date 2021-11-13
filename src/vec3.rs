@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Vec3<T> {
     pub x: T,
     pub y: T,
@@ -49,6 +49,21 @@ where
             x: -self.x,
             y: -self.y,
             z: -self.z,
+        }
+    }
+}
+
+impl<T> Sub for Vec3<T>
+where
+    T: Sub<Output = T>,
+{
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
         }
     }
 }
@@ -140,8 +155,12 @@ impl<T> IndexMut<u8> for Vec3<T> {
 /// Collection of vector methods
 impl<T> Vec3<T>
 where
-    T: Copy + Mul<Output = T> + Add<Output = T> + Sub<Output = T>,
+    T: Copy + Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Div<Output = T>,
 {
+    pub fn new(x: T, y: T, z: T) -> Vec3<T> {
+        Self { x, y, z }
+    }
+
     /// Vector dot product
     pub fn dot(&self, other: &Vec3<T>) -> T {
         self[0] * other[0] + self[1] * other[1] + self[2] * other[2]
@@ -159,5 +178,10 @@ where
     /// Vector length
     pub fn len(&self) -> T {
         self.dot(self)
+    }
+
+    /// Unitary vector
+    pub fn unit(self) -> Vec3<T> {
+        self / self.len()
     }
 }
