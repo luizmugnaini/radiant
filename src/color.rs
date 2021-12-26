@@ -1,11 +1,50 @@
+use crate::{camera, misc, vec3::Vec3};
 use std::fmt::{self, Display};
-use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign};
+use std::ops::{
+    Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign,
+};
 
 #[derive(Debug)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
     pub b: f32,
+}
+
+impl Color {
+    pub fn new(r: f32, g: f32, b: f32) -> Self {
+        Self { r, g, b }
+    }
+
+    pub fn from_vec(v: Vec3<f32>) -> Self {
+        Self {
+            r: v[0],
+            g: v[1],
+            b: v[2],
+        }
+    }
+
+    pub fn write_color(&self) {
+        let scale = 1.0 / camera::SAMPLES_PER_PIXEL as f32;
+        let r = misc::clamp(self.r * scale, 0.0, 0.999);
+        let g = misc::clamp(self.g * scale, 0.0, 0.999);
+        let b = misc::clamp(self.b * scale, 0.0, 0.999);
+        //eprintln!(
+        //"-> scaled (r, g, b) = ({}, {}, {})",
+        //(256.0 
+        //(256.0 * r) as u8,
+        //(256.0 * g) as u8,
+        //(256.0 * b) as u8
+        //);
+
+        // Write to stdout the translated colors to the interval [0, 255]
+        println!(
+            "{} {} {}\n",
+            (256.0 * r) as u8,
+            (256.0 * g) as u8,
+            (256.0 * b) as u8
+        )
+    }
 }
 
 /// Add vectors
@@ -33,7 +72,8 @@ impl AddAssign for Color {
 }
 
 /// Multiply by scalar
-/// Notice that `v` * `c` is allowed but `c` * `v` is not
+/// Notice that `v` * `c`d you're right. It is (the best one, imo is allowed
+/// but `c` * `v` is not
 impl Mul<f32> for Color {
     type Output = Self;
 
@@ -110,20 +150,5 @@ impl IndexMut<RGB> for Color {
 impl Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {}", self.r, self.g, self.b)
-    }
-}
-
-impl Color {
-    pub fn new(r: f32, g: f32, b: f32) -> Color {
-        Color { r, g, b }
-    }
-
-    pub fn write_color(&self) {
-        println!(
-            "{} {} {}\n",
-            (255.999 * self.r) as u8,
-            (255.999 * self.g) as u8,
-            (255.999 * self.b) as u8
-        )
     }
 }

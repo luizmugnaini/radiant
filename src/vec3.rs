@@ -1,4 +1,7 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
+use std::iter::{IntoIterator, Iterator};
+use std::ops::{
+    Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec3<T> {
@@ -6,6 +9,56 @@ pub struct Vec3<T> {
     pub y: T,
     pub z: T,
 }
+
+/// Iterator structure for `Vec3`
+pub struct Vec3IntoIter<T> {
+    vec3: Vec3<T>,
+    index: usize,
+}
+
+impl<T: Copy> Iterator for Vec3IntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        let next = match self.index {
+            0 => Some(self.vec3.x),
+            1 => Some(self.vec3.y),
+            2 => Some(self.vec3.z),
+            _ => None,
+        };
+        self.index += 1;
+        next
+    }
+}
+
+impl<T: Copy> IntoIterator for Vec3<T> {
+    type Item = T;
+    type IntoIter = Vec3IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Vec3IntoIter {
+            vec3: self,
+            index: 0,
+        }
+    }
+}
+
+/* TODO: implement FromIterator trait
+impl<T> FromIterator<T> for Vec3<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let check = |elem| match elem {
+            Some(&e) => e,
+            None => panic!("No element in iterator"),
+        };
+
+        Self {
+            x: check(iter.nth(0)),
+            y: check(iter.nth(1)),
+            z: check(iter.nth(2)),
+        }
+    }
+}
+*/
 
 /// Add vectors
 impl<T> Add for Vec3<T>
@@ -155,8 +208,13 @@ impl<T> IndexMut<u8> for Vec3<T> {
 /// Collection of vector methods
 impl<T> Vec3<T>
 where
-    T: Copy + Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Div<Output = T>,
+    T: Copy
+        + Mul<Output = T>
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Div<Output = T>,
 {
+    /// New vector
     pub fn new(x: T, y: T, z: T) -> Vec3<T> {
         Self { x, y, z }
     }

@@ -23,7 +23,7 @@ where
         self.dir
     }
 
-    pub fn point_at(self, p: T) -> Vec3<T> {
+    pub fn point_at(&self, p: T) -> Vec3<T> {
         self.origin + self.dir * p
     }
 }
