@@ -29,7 +29,7 @@ fn ray_color(ray: Ray<f32>, world: &SurfList, depth: i32) -> Color {
 
             // The `target` is a random point within the unit sphere from the
             // direction of the incoming ray
-            let target = rec.point + rec.normal + Vec3::random_unit_sphere();
+            let target = rec.point + rec.normal + Vec3::random_unit_vector();
 
             // The object absorbes 50% of the light and we look for the
             // following reflection

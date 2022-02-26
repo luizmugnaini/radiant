@@ -221,38 +221,59 @@ where
     pub fn len_squared(&self) -> T {
         self.dot(self)
     }
-
-    /// Unitary vector
-    pub fn unit(self) -> Vec3<T> {
-        self / self.len_squared()
-    }
 }
 
 impl Vec3<f32> {
-    pub fn random() -> Vec3<f32> {
-        Vec3::new(misc::rand(), misc::rand(), misc::rand())
+    pub fn len(&self) -> f32 {
+        self.dot(self).sqrt()
     }
 
-    pub fn random_on(min: f32, max: f32) -> Vec3<f32> {
-        Vec3::new(
+    /// Unitary vector
+    pub fn unit(self) -> Self {
+        self / self.len()
+    }
+
+    pub fn unit_vector(self) -> Self {
+        self / self.len()
+    }
+
+    pub fn random() -> Vec3<f32> {
+        Self::new(misc::rand(), misc::rand(), misc::rand())
+    }
+
+    pub fn random_on(min: f32, max: f32) -> Self {
+        Self::new(
             misc::rand_on(min, max),
             misc::rand_on(min, max),
             misc::rand_on(min, max),
         )
     }
 
-    pub fn len(&self) -> f32 {
-        self.dot(self).sqrt()
-    }
-
-    pub fn random_unit_sphere() -> Vec3<f32> {
+    // Hacky incorrect method for diffusion
+    pub fn random_unit_sphere() -> Self {
         loop {
-            let rand = Vec3::random_on(-1.0, 1.0);
+            let rand = Self::random_on(-1.0, 1.0);
             if rand.len_squared() > 1.0 {
                 continue;
             } else {
                 return rand;
             }
+        }
+    }
+
+    // Lambertian diffusion method
+    pub fn random_unit_vector() -> Self {
+        Self::random_unit_sphere().unit_vector()
+    }
+
+    // Another approach for diffusion
+    pub fn random_in_hemisphere(normal: Self) -> Self {
+        let v = Self::random_unit_sphere();
+        // If `v` is in the same side as the `normal`, return it
+        if v.dot(&normal) > 0.0 {
+            v
+        } else {
+            -v
         }
     }
 }
