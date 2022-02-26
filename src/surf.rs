@@ -10,7 +10,7 @@ use crate::vec3::Vec3;
 // negative, then we have that the normal should be pointing outward, otherwise
 // inward (-outward normal)
 pub struct HitRecord {
-    point: Vec3<f32>,
+    pub point: Vec3<f32>,
     pub normal: Vec3<f32>,
     pub parameter: f32,
     front_face: bool,

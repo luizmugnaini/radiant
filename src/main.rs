@@ -16,19 +16,39 @@ use surf::{HitRecord, Sphere};
 use surf_list::SurfList;
 use vec3::Vec3;
 
-fn ray_color(ray: Ray<f32>, world: &SurfList) -> Color {
-    let mut rec = HitRecord::new();
-    if world.hit(&ray, 0.0, INFTY, &mut rec) {
-        Color::from_vec((rec.normal + Vec3::new(1.0, 1.0, 1.0)) * 0.5)
+fn ray_color(ray: Ray<f32>, world: &SurfList, depth: i32) -> Color {
+    if depth <= 0 {
+        // Exceded maximum number of bounces, considers that the location is
+        // near a shadow, so it returns a black pixel
+        Color::new(0.0, 0.0, 0.0)
     } else {
-        let unit_dir = ray.dir.unit();
-        let t = 0.5 * (unit_dir.y + 1.0);
-        Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t
+        let mut rec = HitRecord::new();
+        if world.hit(&ray, 0.001, INFTY, &mut rec) {
+            // The ray will be reflected at a random direction. This is done in
+            // order to simulate a rough surface and therefore create texture.
+
+            // The `target` is a random point within the unit sphere from the
+            // direction of the incoming ray
+            let target = rec.point + rec.normal + Vec3::random_unit_sphere();
+
+            // The object absorbes 50% of the light and we look for the
+            // following reflection
+            ray_color(
+                Ray::new(rec.point, target - rec.point),
+                world,
+                depth - 1,
+            ) * 0.5
+        } else {
+            let unit_dir = ray.dir.unit();
+            let t = 0.5 * (unit_dir.y + 1.0);
+            Color::new(1.0, 1.0, 1.0) * (1.0 - t)
+                + Color::new(0.5, 0.7, 1.0) * t
+        }
     }
 }
 
 fn main() {
-    // World
+    // World where the objects exist
     let mut world = SurfList::new();
     world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5));
     world.add(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0));
@@ -54,7 +74,7 @@ fn main() {
                 let v = (j as f32 + misc::rand())
                     / (camera::IMAGE_HEIGHT - 1) as f32;
                 let r = camera.get_ray(u, v);
-                pixel_color += ray_color(r, &world);
+                pixel_color += ray_color(r, &world, camera::MAX_DEPTH);
             }
             pixel_color.write_color()
         }

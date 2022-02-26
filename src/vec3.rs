@@ -1,3 +1,4 @@
+use crate::misc;
 use std::iter::{IntoIterator, Iterator};
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub,
@@ -42,23 +43,6 @@ impl<T: Copy> IntoIterator for Vec3<T> {
         }
     }
 }
-
-/* TODO: implement FromIterator trait
-impl<T> FromIterator<T> for Vec3<T> {
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        let check = |elem| match elem {
-            Some(&e) => e,
-            None => panic!("No element in iterator"),
-        };
-
-        Self {
-            x: check(iter.nth(0)),
-            y: check(iter.nth(1)),
-            z: check(iter.nth(2)),
-        }
-    }
-}
-*/
 
 /// Add vectors
 impl<T> Add for Vec3<T>
@@ -234,12 +218,41 @@ where
     }
 
     /// Vector length
-    pub fn len(&self) -> T {
+    pub fn len_squared(&self) -> T {
         self.dot(self)
     }
 
     /// Unitary vector
     pub fn unit(self) -> Vec3<T> {
-        self / self.len()
+        self / self.len_squared()
+    }
+}
+
+impl Vec3<f32> {
+    pub fn random() -> Vec3<f32> {
+        Vec3::new(misc::rand(), misc::rand(), misc::rand())
+    }
+
+    pub fn random_on(min: f32, max: f32) -> Vec3<f32> {
+        Vec3::new(
+            misc::rand_on(min, max),
+            misc::rand_on(min, max),
+            misc::rand_on(min, max),
+        )
+    }
+
+    pub fn len(&self) -> f32 {
+        self.dot(self).sqrt()
+    }
+
+    pub fn random_unit_sphere() -> Vec3<f32> {
+        loop {
+            let rand = Vec3::random_on(-1.0, 1.0);
+            if rand.len_squared() > 1.0 {
+                continue;
+            } else {
+                return rand;
+            }
+        }
     }
 }

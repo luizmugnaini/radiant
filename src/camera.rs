@@ -4,7 +4,8 @@ use crate::{ray::Ray, vec3::Vec3};
 pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
 pub const IMAGE_WIDTH: i32 = 400;
 pub const IMAGE_HEIGHT: i32 = (400.0 * 9.0 / 16.0) as i32;
-pub const SAMPLES_PER_PIXEL: i32 = 100;
+pub const SAMPLES_PER_PIXEL: i32 = 45; // 100
+pub const MAX_DEPTH: i32 = 40; // 50
 
 // Camera constants
 const VIEWPORT_HEIGHT: f32 = 2.0;
