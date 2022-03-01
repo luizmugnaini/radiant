@@ -4,11 +4,11 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Color {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
+    r: f32,
+    g: f32,
+    b: f32,
 }
 
 impl Color {
@@ -76,6 +76,18 @@ impl Mul<f32> for Color {
             r: c * self.r,
             g: c * self.g,
             b: c * self.b,
+        }
+    }
+}
+
+impl Mul<Color> for Color {
+    type Output = Self;
+
+    fn mul(self, other: Color) -> Self {
+        Self {
+            r: self.r * other.r,
+            g: self.g * other.g,
+            b: self.b * other.b,
         }
     }
 }

@@ -6,9 +6,117 @@ use std::ops::{
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec3<T> {
-    pub x: T,
-    pub y: T,
-    pub z: T,
+    x: T,
+    y: T,
+    z: T,
+}
+
+impl<T> Vec3<T>
+where
+    T: Copy
+        + Mul<Output = T>
+        + Add<Output = T>
+        + Sub<Output = T>
+        + Div<Output = T>,
+{
+    /// New vector
+    pub fn new(x: T, y: T, z: T) -> Vec3<T> {
+        Self { x, y, z }
+    }
+
+    pub fn x(&self) -> T {
+        self.x
+    }
+
+    pub fn y(&self) -> T {
+        self.y
+    }
+
+    pub fn z(&self) -> T {
+        self.z
+    }
+
+    /// Vector dot product
+    pub fn dot(&self, other: &Vec3<T>) -> T {
+        self[0] * other[0] + self[1] * other[1] + self[2] * other[2]
+    }
+
+    /// Vector cross product
+    pub fn cross(self, other: Vec3<T>) -> Vec3<T> {
+        Self {
+            x: self.y * other.z - self.z * other.y,
+            y: self.z * other.x - self.x * other.z,
+            z: self.x * other.y - self.y * other.x,
+        }
+    }
+
+    /// Vector length
+    pub fn len_squared(&self) -> T {
+        self.dot(self)
+    }
+}
+
+impl Vec3<f32> {
+    pub fn len(&self) -> f32 {
+        self.dot(self).sqrt()
+    }
+
+    /// Unitary vector
+    pub fn unit(self) -> Self {
+        self / self.len()
+    }
+
+    pub fn unit_vector(&self) -> Self {
+        *self / self.len()
+    }
+
+    pub fn near_zero(&self) -> bool {
+        self.x < f32::EPSILON && self.y < f32::EPSILON && self.z < f32::EPSILON
+    }
+
+    pub fn reflect(&self, normal: &Self) -> Self {
+        *self - (*normal * self.dot(normal) * 2.0)
+    }
+
+    pub fn random() -> Vec3<f32> {
+        Self::new(misc::rand(), misc::rand(), misc::rand())
+    }
+
+    pub fn random_on(min: f32, max: f32) -> Self {
+        Self::new(
+            misc::rand_on(min, max),
+            misc::rand_on(min, max),
+            misc::rand_on(min, max),
+        )
+    }
+
+    // Hacky incorrect method for diffusion
+    pub fn random_unit_sphere() -> Self {
+        loop {
+            let rand = Self::random_on(-1.0, 1.0);
+            if rand.len_squared() > 1.0 {
+                continue;
+            } else {
+                return rand;
+            }
+        }
+    }
+
+    // Lambertian diffusion method
+    pub fn random_unit_vector() -> Self {
+        Self::random_unit_sphere().unit_vector()
+    }
+
+    // Another approach for diffusion
+    pub fn random_in_hemisphere(normal: Self) -> Self {
+        let v = Self::random_unit_sphere();
+        // If `v` is in the same side as the `normal`, return it
+        if v.dot(&normal) > 0.0 {
+            v
+        } else {
+            -v
+        }
+    }
 }
 
 /// Iterator structure for `Vec3`
@@ -185,95 +293,6 @@ impl<T> IndexMut<u8> for Vec3<T> {
             1 => &mut self.y,
             2 => &mut self.z,
             _ => panic!("Index out of bounds for Vec3"),
-        }
-    }
-}
-
-/// Collection of vector methods
-impl<T> Vec3<T>
-where
-    T: Copy
-        + Mul<Output = T>
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Div<Output = T>,
-{
-    /// New vector
-    pub fn new(x: T, y: T, z: T) -> Vec3<T> {
-        Self { x, y, z }
-    }
-
-    /// Vector dot product
-    pub fn dot(&self, other: &Vec3<T>) -> T {
-        self[0] * other[0] + self[1] * other[1] + self[2] * other[2]
-    }
-
-    /// Vector cross product
-    pub fn cross(self, other: Vec3<T>) -> Vec3<T> {
-        Self {
-            x: self.y * other.z - self.z * other.y,
-            y: self.z * other.x - self.x * other.z,
-            z: self.x * other.y - self.y * other.x,
-        }
-    }
-
-    /// Vector length
-    pub fn len_squared(&self) -> T {
-        self.dot(self)
-    }
-}
-
-impl Vec3<f32> {
-    pub fn len(&self) -> f32 {
-        self.dot(self).sqrt()
-    }
-
-    /// Unitary vector
-    pub fn unit(self) -> Self {
-        self / self.len()
-    }
-
-    pub fn unit_vector(self) -> Self {
-        self / self.len()
-    }
-
-    pub fn random() -> Vec3<f32> {
-        Self::new(misc::rand(), misc::rand(), misc::rand())
-    }
-
-    pub fn random_on(min: f32, max: f32) -> Self {
-        Self::new(
-            misc::rand_on(min, max),
-            misc::rand_on(min, max),
-            misc::rand_on(min, max),
-        )
-    }
-
-    // Hacky incorrect method for diffusion
-    pub fn random_unit_sphere() -> Self {
-        loop {
-            let rand = Self::random_on(-1.0, 1.0);
-            if rand.len_squared() > 1.0 {
-                continue;
-            } else {
-                return rand;
-            }
-        }
-    }
-
-    // Lambertian diffusion method
-    pub fn random_unit_vector() -> Self {
-        Self::random_unit_sphere().unit_vector()
-    }
-
-    // Another approach for diffusion
-    pub fn random_in_hemisphere(normal: Self) -> Self {
-        let v = Self::random_unit_sphere();
-        // If `v` is in the same side as the `normal`, return it
-        if v.dot(&normal) > 0.0 {
-            v
-        } else {
-            -v
         }
     }
 }

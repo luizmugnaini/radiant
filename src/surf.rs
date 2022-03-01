@@ -1,18 +1,14 @@
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
 // Note: this HitRecord takes the approach of calculating whether the ray hits
 // from the front or back of the surface on the coloring.
-//
-// The normal should point always oposite to the incoming ray
-//
-// If the dot product between the incoming ray and the outward normal is
-// negative, then we have that the normal should be pointing outward, otherwise
-// inward (-outward normal)
 pub struct HitRecord {
-    pub point: Vec3<f32>,
-    pub normal: Vec3<f32>,
-    pub parameter: f32,
+    point: Vec3<f32>,
+    normal: Vec3<f32>,
+    material: Material,
+    parameter: f32,
     front_face: bool,
 }
 
@@ -22,25 +18,43 @@ impl HitRecord {
         Self {
             point: Vec3::new(0.0, 0.0, 0.0),
             normal: Vec3::new(0.0, 0.0, 0.0),
+            material: Material::default(),
             parameter: 0.0,
             front_face: true,
         }
     }
 
-    fn set_face_normal(&mut self, ray: &Ray<f32>, outward_normal: Vec3<f32>) {
-        self.front_face = ray.dir.dot(&outward_normal) < 0.0;
+    // The normal should point always oposite to the incoming ray
+    fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3<f32>) {
+        self.front_face = ray.direction().dot(&outward_normal) < 0.0;
         self.normal = if self.front_face {
             outward_normal
         } else {
             -outward_normal
         };
     }
+
+    pub fn point(&self) -> Vec3<f32> {
+        self.point
+    }
+
+    pub fn normal(&self) -> Vec3<f32> {
+        self.normal
+    }
+
+    pub fn material(&self) -> Material {
+        self.material
+    }
+
+    pub fn parameter(&self) -> f32 {
+        self.parameter
+    }
 }
 
 pub trait Surface {
     fn hit(
         &self,
-        ray: &Ray<f32>,
+        ray: &Ray,
         t_min: f32,
         t_max: f32,
         rec: &mut HitRecord,
@@ -49,27 +63,32 @@ pub trait Surface {
 
 #[derive(Clone, Copy)]
 pub struct Sphere {
-    pub center: Vec3<f32>,
-    pub radius: f32,
+    center: Vec3<f32>,
+    radius: f32,
+    material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3<f32>, radius: f32) -> Self {
-        Self { center, radius }
+    pub fn new(center: Vec3<f32>, radius: f32, material: Material) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
 impl Surface for Sphere {
     fn hit(
         &self,
-        ray: &Ray<f32>,
+        ray: &Ray,
         t_min: f32,
         t_max: f32,
         rec: &mut HitRecord,
     ) -> bool {
-        let oc: Vec3<f32> = ray.origin - self.center;
-        let a = ray.dir.dot(&ray.dir);
-        let half_b = oc.dot(&ray.dir);
+        let oc: Vec3<f32> = ray.origin() - self.center;
+        let a = ray.direction().dot(&ray.direction());
+        let half_b = oc.dot(&ray.direction());
         let discriminant = {
             let c = oc.dot(&oc) - self.radius * self.radius;
             half_b * half_b - a * c
@@ -103,6 +122,7 @@ impl Surface for Sphere {
                     let outward_normal: Vec3<f32> =
                         (rec.point - self.center) / self.radius;
                     rec.set_face_normal(&ray, outward_normal);
+                    rec.material = self.material;
                     true
                 }
                 None => false,
