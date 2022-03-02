@@ -1,14 +1,12 @@
-use crate::material::Material;
-use crate::ray::Ray;
-use crate::vec3::Vec3;
+use crate::{material::Material, ray::Ray, vec3::Vec3};
 
 // Note: this HitRecord takes the approach of calculating whether the ray hits
 // from the front or back of the surface on the coloring.
 pub struct HitRecord {
-    point: Vec3<f32>,
-    normal: Vec3<f32>,
+    point: Vec3<f64>,
+    normal: Vec3<f64>,
     material: Material,
-    parameter: f32,
+    parameter: f64,
     front_face: bool,
 }
 
@@ -25,7 +23,7 @@ impl HitRecord {
     }
 
     // The normal should point always oposite to the incoming ray
-    fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3<f32>) {
+    fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3<f64>) {
         self.front_face = ray.direction().dot(&outward_normal) < 0.0;
         self.normal = if self.front_face {
             outward_normal
@@ -34,11 +32,11 @@ impl HitRecord {
         };
     }
 
-    pub fn point(&self) -> Vec3<f32> {
+    pub fn point(&self) -> Vec3<f64> {
         self.point
     }
 
-    pub fn normal(&self) -> Vec3<f32> {
+    pub fn normal(&self) -> Vec3<f64> {
         self.normal
     }
 
@@ -46,8 +44,12 @@ impl HitRecord {
         self.material
     }
 
-    pub fn parameter(&self) -> f32 {
+    pub fn parameter(&self) -> f64 {
         self.parameter
+    }
+
+    pub fn front_face(&self) -> bool {
+        self.front_face
     }
 }
 
@@ -55,21 +57,21 @@ pub trait Surface {
     fn hit(
         &self,
         ray: &Ray,
-        t_min: f32,
-        t_max: f32,
+        t_min: f64,
+        t_max: f64,
         rec: &mut HitRecord,
     ) -> bool;
 }
 
 #[derive(Clone, Copy)]
 pub struct Sphere {
-    center: Vec3<f32>,
-    radius: f32,
+    center: Vec3<f64>,
+    radius: f64,
     material: Material,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3<f32>, radius: f32, material: Material) -> Self {
+    pub fn new(center: Vec3<f64>, radius: f64, material: Material) -> Self {
         Self {
             center,
             radius,
@@ -82,11 +84,11 @@ impl Surface for Sphere {
     fn hit(
         &self,
         ray: &Ray,
-        t_min: f32,
-        t_max: f32,
+        t_min: f64,
+        t_max: f64,
         rec: &mut HitRecord,
     ) -> bool {
-        let oc: Vec3<f32> = ray.origin() - self.center;
+        let oc: Vec3<f64> = ray.origin() - self.center;
         let a = ray.direction().dot(&ray.direction());
         let half_b = oc.dot(&ray.direction());
         let discriminant = {
@@ -100,7 +102,7 @@ impl Surface for Sphere {
             let sqrtd = discriminant.sqrt();
 
             // nearest root within the parameters
-            let root: Option<f32> = {
+            let root: Option<f64> = {
                 let r1 = (-half_b - sqrtd) / a;
                 if r1 < t_min || t_max < r1 {
                     // try the next possible root
@@ -119,7 +121,7 @@ impl Surface for Sphere {
                 Some(r) => {
                     rec.parameter = r;
                     rec.point = ray.point_at(r);
-                    let outward_normal: Vec3<f32> =
+                    let outward_normal: Vec3<f64> =
                         (rec.point - self.center) / self.radius;
                     rec.set_face_normal(&ray, outward_normal);
                     rec.material = self.material;

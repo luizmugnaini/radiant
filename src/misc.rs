@@ -1,20 +1,20 @@
 use rand::Rng;
 
-pub const INFTY: f32 = f32::MAX;
-pub const PI: f32 = 3.1415926535897932385;
+pub const INFTY: f64 = f64::MAX;
+pub const PI: f64 = 3.1415926535897932385;
 
 // Degrees to radians
-pub fn deg_to_rad(deg: f32) -> f32 {
+pub fn deg_to_rad(deg: f64) -> f64 {
     deg * PI / 180.0
 }
 
-// Random f32 in the open interval `[0.0, 1.0)`
-pub fn rand() -> f32 {
+// Random f64 in the open interval `[0.0, 1.0)`
+pub fn rand() -> f64 {
     rand::thread_rng().gen_range(0.0..1.0)
 }
 
-// Random f32 in the open interval `[min, max)`
-pub fn rand_on(min: f32, max: f32) -> f32 {
+// Random f64 in the open interval `[min, max)`
+pub fn rand_on(min: f64, max: f64) -> f64 {
     rand::thread_rng().gen_range(min..max)
 }
 

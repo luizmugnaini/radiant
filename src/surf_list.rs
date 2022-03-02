@@ -1,5 +1,7 @@
-use crate::ray::Ray;
-use crate::surf::{HitRecord, Sphere, Surface};
+use crate::{
+    ray::Ray,
+    surf::{HitRecord, Sphere, Surface},
+};
 
 // `SurfList` accepts a vector of `Sphere` of the same material
 pub struct SurfList {
@@ -18,8 +20,8 @@ impl SurfList {
     pub fn hit(
         &self,
         ray: &Ray,
-        t_min: f32,
-        t_max: f32,
+        t_min: f64,
+        t_max: f64,
         rec: &mut HitRecord,
     ) -> bool {
         let mut temp_rec: HitRecord = HitRecord::new();

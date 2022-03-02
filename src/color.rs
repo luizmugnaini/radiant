@@ -1,7 +1,7 @@
 use crate::{camera, misc, vec3::Vec3};
-use std::fmt::{self, Display};
-use std::ops::{
-    Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign,
+use std::{
+    fmt::{self, Display},
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign},
 };
 
 #[derive(Debug, Clone, Copy)]

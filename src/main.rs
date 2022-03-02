@@ -11,7 +11,7 @@ mod vec3;
 // Imports
 use camera::Camera;
 use color::Color;
-use material::{Lambertian, Material, Metal};
+use material::Material;
 use misc::INFTY;
 use ray::Ray;
 use surf::{HitRecord, Sphere};
@@ -35,34 +35,24 @@ fn ray_color(ray: Ray, world: &SurfList, depth: i32) -> Color {
         } else {
             let unit_dir = ray.direction().unit();
             let t = 0.5 * (unit_dir.y() + 1.0);
-            Color::new(1.0, 1.0, 1.0) * (1.0 - t)
-                + Color::new(0.5, 0.7, 1.0) * t
+            Color::new(1.0, 1.0, 1.0) * (1.0 - t) as f32
+                + Color::new(0.5, 0.7, 1.0) * t as f32
         }
     }
 }
 
 fn main() {
     // Various kinds of materials that compose the scene
-    let material_ground =
-        Material::Lambertian(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    let material_center =
-        Material::Lambertian(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
-    let material_left = Material::Metal(Metal::new(Color::new(0.8, 0.8, 0.8)));
-    let material_right =
-        Material::Metal(Metal::new(Color::new(0.8, 0.6, 0.2)));
+    let material_left = Material::lambertian(Color::new(0.0, 0.0, 1.0));
+    let material_right = Material::lambertian(Color::new(1.0, 0.0, 0.0));
 
     // World where the objects exist
+    let r = f64::cos(misc::PI / 4.0);
     let mut world = SurfList::new();
-    world.add(Sphere::new(
-        Vec3::new(0.0, -100.5, -1.0),
-        100.0,
-        material_ground,
-    ));
-    world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_center));
-    world.add(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left));
-    world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right));
+    world.add(Sphere::new(Vec3::new(-r, 0.0, -1.0), r, material_left));
+    world.add(Sphere::new(Vec3::new(r, 0.0, -1.0), r, material_right));
 
-    let camera = Camera::new();
+    let camera = Camera::new(90.0, camera::ASPECT_RATIO);
 
     // Render to ppm format
     println!(
@@ -78,10 +68,10 @@ fn main() {
 
             // Antialiasing process for each pixel
             for _ in 0..camera::SAMPLES_PER_PIXEL {
-                let u = (i as f32 + misc::rand())
-                    / (camera::IMAGE_WIDTH - 1) as f32;
-                let v = (j as f32 + misc::rand())
-                    / (camera::IMAGE_HEIGHT - 1) as f32;
+                let u = (i as f64 + misc::rand())
+                    / (camera::IMAGE_WIDTH - 1) as f64;
+                let v = (j as f64 + misc::rand())
+                    / (camera::IMAGE_HEIGHT - 1) as f64;
                 let r = camera.get_ray(u, v);
                 pixel_color += ray_color(r, &world, camera::MAX_DEPTH);
             }

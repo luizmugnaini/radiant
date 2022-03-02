@@ -1,7 +1,10 @@
 use crate::misc;
-use std::iter::{IntoIterator, Iterator};
-use std::ops::{
-    Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub,
+use std::{
+    iter::{IntoIterator, Iterator},
+    ops::{
+        Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg,
+        Sub,
+    },
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -56,8 +59,8 @@ where
     }
 }
 
-impl Vec3<f32> {
-    pub fn len(&self) -> f32 {
+impl Vec3<f64> {
+    pub fn len(&self) -> f64 {
         self.dot(self).sqrt()
     }
 
@@ -71,18 +74,27 @@ impl Vec3<f32> {
     }
 
     pub fn near_zero(&self) -> bool {
-        self.x < f32::EPSILON && self.y < f32::EPSILON && self.z < f32::EPSILON
+        self.x < f64::EPSILON && self.y < f64::EPSILON && self.z < f64::EPSILON
     }
 
     pub fn reflect(&self, normal: &Self) -> Self {
         *self - (*normal * self.dot(normal) * 2.0)
     }
 
-    pub fn random() -> Vec3<f32> {
+    pub fn refract(&self, normal: &Self, index_refrac_ratio: f64) -> Self {
+        let cos_theta = f64::min(-self.dot(&normal), 1.0);
+        let refrac_perpendicular =
+            (*self + *normal * cos_theta) * index_refrac_ratio;
+        let refrac_parallel = -*normal
+            * f64::sqrt(f64::abs(1.0 - refrac_perpendicular.len_squared()));
+        refrac_perpendicular + refrac_parallel
+    }
+
+    pub fn random() -> Self {
         Self::new(misc::rand(), misc::rand(), misc::rand())
     }
 
-    pub fn random_on(min: f32, max: f32) -> Self {
+    pub fn random_on(min: f64, max: f64) -> Self {
         Self::new(
             misc::rand_on(min, max),
             misc::rand_on(min, max),
