@@ -45,7 +45,7 @@ where
     }
 
     /// Vector cross product
-    pub fn cross(self, other: Vec3<T>) -> Vec3<T> {
+    pub fn cross(&self, other: &Vec3<T>) -> Vec3<T> {
         Self {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
@@ -127,6 +127,21 @@ impl Vec3<f64> {
             v
         } else {
             -v
+        }
+    }
+
+    pub fn random_in_unit_disk() -> Self {
+        loop {
+            let point = Vec3::new(
+                misc::rand_on(-1.0, 1.0),
+                misc::rand_on(-1.0, 1.0),
+                0.0,
+            );
+            if point.len_squared() >= 1.0 {
+                continue;
+            } else {
+                return point;
+            }
         }
     }
 }

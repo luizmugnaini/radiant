@@ -16,11 +16,19 @@ impl Color {
         Self { r, g, b }
     }
 
-    pub fn from_vec(v: Vec3<f32>) -> Self {
+    pub fn rand() -> Self {
         Self {
-            r: v[0],
-            g: v[1],
-            b: v[2],
+            r: misc::rand() as f32,
+            g: misc::rand() as f32,
+            b: misc::rand() as f32,
+        }
+    }
+
+    pub fn rand_on(min: f64, max: f64) -> Self {
+        Self {
+            r: misc::rand_on(min, max) as f32,
+            g: misc::rand_on(min, max) as f32,
+            b: misc::rand_on(min, max) as f32,
         }
     }
 

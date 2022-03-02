@@ -41,18 +41,86 @@ fn ray_color(ray: Ray, world: &SurfList, depth: i32) -> Color {
     }
 }
 
-fn main() {
-    // Various kinds of materials that compose the scene
-    let material_left = Material::lambertian(Color::new(0.0, 0.0, 1.0));
-    let material_right = Material::lambertian(Color::new(1.0, 0.0, 0.0));
-
-    // World where the objects exist
-    let r = f64::cos(misc::PI / 4.0);
+fn random_scene() -> SurfList {
     let mut world = SurfList::new();
-    world.add(Sphere::new(Vec3::new(-r, 0.0, -1.0), r, material_left));
-    world.add(Sphere::new(Vec3::new(r, 0.0, -1.0), r, material_right));
 
-    let camera = Camera::new(90.0, camera::ASPECT_RATIO);
+    // Ground
+    let ground_material = Material::lambertian(Color::new(0.5, 0.5, 0.5));
+    world.add(Sphere::new(
+        Vec3::new(0.0, -100.0, 0.0),
+        1000.0,
+        ground_material,
+    ));
+
+    // Random spheres
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_material = misc::rand();
+            let center = Vec3::new(
+                a as f64 + 0.9 * misc::rand(),
+                0.2,
+                b as f64 + 0.9 * misc::rand(),
+            );
+
+            if (center - Vec3::new(4.0, 0.2, 0.0)).len() > 0.9 {
+                let sphere_material = if choose_material < 0.8 {
+                    // Lambertian
+                    let albedo = Color::rand() * Color::rand();
+                    Material::lambertian(albedo)
+                } else if choose_material < 0.95 {
+                    // Metal
+                    let albedo = Color::rand_on(0.5, 1.0);
+                    let fuzz = misc::rand_on(0.0, 0.5);
+                    Material::metal(albedo, fuzz)
+                } else {
+                    // Glass
+                    Material::dielectric(1.5)
+                };
+
+                world.add(Sphere::new(center, 0.2, sphere_material));
+            }
+        }
+    }
+
+    // Standard spheres to all scenes
+    world.add(Sphere::new(
+        Vec3::new(0.0, 1.0, 0.0),
+        1.0,
+        Material::dielectric(1.5),
+    ));
+    world.add(Sphere::new(
+        Vec3::new(-4.0, 1.0, 0.0),
+        1.0,
+        Material::lambertian(Color::new(0.4, 0.2, 0.1)),
+    ));
+    world.add(Sphere::new(
+        Vec3::new(4.0, 1.0, 0.0),
+        1.0,
+        Material::metal(Color::new(0.7, 0.6, 0.5), 0.0),
+    ));
+
+    world
+}
+
+fn main() {
+    // World where the objects exist
+    let world = random_scene();
+
+    // Create a camera
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        camera::ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+    );
 
     // Render to ppm format
     println!(
