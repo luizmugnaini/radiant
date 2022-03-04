@@ -7,6 +7,8 @@ edition = "2018"
 
 [dependencies]
 rand = "0.8.4"
+rayon = "1.5"
+indicatif = {version = "0.16.2", features = ["rayon"]}
 
 [profile.release]
 debug = true

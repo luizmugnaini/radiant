@@ -1,4 +1,4 @@
-use crate::{camera, misc, vec3::Vec3};
+use crate::{camera, misc};
 use std::{
     fmt::{self, Display},
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign},
@@ -32,20 +32,15 @@ impl Color {
         }
     }
 
-    pub fn write_color(&self) {
+    pub fn rgb(self) -> (u8, u8, u8) {
         // Gamma correction for gamma = 2.0
         let scale = 1.0 / camera::SAMPLES_PER_PIXEL as f32;
         let r = misc::clamp(f32::sqrt(self.r * scale), 0.0, 0.999);
         let g = misc::clamp(f32::sqrt(self.g * scale), 0.0, 0.999);
         let b = misc::clamp(f32::sqrt(self.b * scale), 0.0, 0.999);
 
-        // Write to stdout the translated colors to the interval [0, 255]
-        println!(
-            "{} {} {}\n",
-            (256.0 * r) as u8,
-            (256.0 * g) as u8,
-            (256.0 * b) as u8
-        )
+        // Translated colors to the interval [0, 255]
+        ((256.0 * r) as u8, (256.0 * g) as u8, (256.0 * b) as u8)
     }
 }
 
