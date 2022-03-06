@@ -82,7 +82,7 @@ impl Vec3<f64> {
     }
 
     pub fn refract(&self, normal: &Self, index_refrac_ratio: f64) -> Self {
-        let cos_theta = f64::min(-self.dot(&normal), 1.0);
+        let cos_theta = f64::min(-self.dot(normal), 1.0);
         let refrac_perpendicular =
             (*self + *normal * cos_theta) * index_refrac_ratio;
         let refrac_parallel = -*normal

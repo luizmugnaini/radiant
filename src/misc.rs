@@ -1,7 +1,8 @@
 use rand::Rng;
+use std::f64::consts;
 
 pub const INFTY: f64 = f64::MAX;
-pub const PI: f64 = 3.1415926535897932385;
+pub const PI: f64 = consts::PI;
 
 // Degrees to radians
 pub fn deg_to_rad(deg: f64) -> f64 {

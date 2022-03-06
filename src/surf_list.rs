@@ -39,6 +39,12 @@ impl SurfList {
     }
 }
 
+impl Default for SurfList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub struct SurfListIntoIter {
     index: usize,
     list: Vec<Sphere>,

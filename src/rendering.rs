@@ -15,11 +15,10 @@ use indicatif::{
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{fs::File, io::Write, process::Command, time::Instant};
 
-fn write_image(
-    filepath: &str,
-    pixels: &[(u8, u8, u8)],
-    progress_style: ProgressStyle,
-) {
+type Pixel = (u8, u8, u8);
+type Line = [Pixel];
+
+fn write_image(filepath: &str, lines: &Line, progress_style: ProgressStyle) {
     eprintln!("=> Writing image to file: {filepath} ...");
     let file = File::create(filepath);
 
@@ -41,13 +40,12 @@ fn write_image(
             };
 
             // Writing progress bar
-            let write_progress = ProgressBar::new(pixels.len() as u64);
+            let write_progress = ProgressBar::new(lines.len() as u64);
             write_progress.set_style(progress_style);
 
             // Write pixel to ppm file
-            for (r, g, b) in pixels.iter().rev().progress_with(write_progress)
-            {
-                if let Err(we) = write!(f, "{} {} {}\n", r, g, b) {
+            for (r, g, b) in lines.iter().rev().progress_with(write_progress) {
+                if let Err(we) = writeln!(f, "{} {} {}", r, g, b) {
                     write_error(we);
                 };
             }
@@ -179,23 +177,21 @@ pub fn render_line(
     camera: &Camera,
     world: &SurfList,
     line_number: usize,
-    line: &mut [(u8, u8, u8)],
+    line: &mut Line,
 ) {
-    let mut pixel_index = 0;
-    for pixel in line.iter_mut().rev() {
+    for (index, pixel) in line.iter_mut().rev().enumerate() {
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         // Antialiasing process for each pixel
         for _ in 0..camera::SAMPLES_PER_PIXEL {
-            let u = (pixel_index as f64 + misc::rand())
+            let u = (index as f64 + misc::rand())
                 / (camera::IMAGE_WIDTH - 1) as f64;
             let v = (line_number as f64 + misc::rand())
                 / (camera::IMAGE_HEIGHT - 1) as f64;
             let r = camera.get_ray(u, v);
-            pixel_color += ray_color(r, &world, camera::MAX_DEPTH);
+            pixel_color += ray_color(r, world, camera::MAX_DEPTH);
         }
         let rgb = pixel_color.rgb();
         (pixel.0, pixel.1, pixel.2) = (rgb.0, rgb.1, rgb.2);
-        pixel_index += 1;
     }
 }
 
@@ -221,9 +217,9 @@ pub fn render(filepath: &str, camera: Camera, scene: &str) {
     progress_lines.set_style(progress_style.clone());
 
     // Array containing all pixels from the image
-    let mut pixels: Vec<(u8, u8, u8)> =
+    let mut pixels: Vec<Pixel> =
         vec![(0, 0, 0); (camera::IMAGE_HEIGHT * camera::IMAGE_WIDTH) as usize];
-    let lines: Vec<(usize, &mut [(u8, u8, u8)])> = pixels
+    let lines: Vec<(usize, &mut Line)> = pixels
         .chunks_mut(camera::IMAGE_WIDTH as usize)
         .enumerate()
         .collect();

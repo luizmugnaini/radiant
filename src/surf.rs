@@ -53,6 +53,12 @@ impl HitRecord {
     }
 }
 
+impl Default for HitRecord {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub trait Surface {
     fn hit(
         &self,
@@ -123,7 +129,7 @@ impl Surface for Sphere {
                     rec.point = ray.point_at(r);
                     let outward_normal: Vec3<f64> =
                         (rec.point - self.center) / self.radius;
-                    rec.set_face_normal(&ray, outward_normal);
+                    rec.set_face_normal(ray, outward_normal);
                     rec.material = self.material;
                     true
                 }
