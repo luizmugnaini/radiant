@@ -1,4 +1,4 @@
-use crate::{material::Material, ray::Ray, vec3::Vec3};
+pub use crate::{material::Material, ray::Ray, vec3::Vec3};
 
 // Note: this HitRecord takes the approach of calculating whether the ray hits
 // from the front or back of the surface on the coloring.
