@@ -9,6 +9,7 @@ edition = "2018"
 rand = "0.8.4"
 rayon = "1.5"
 indicatif = {version = "0.16.2", features = ["rayon"]}
+num_cpus = "1.4.0"
 
 [profile.release]
 debug = true

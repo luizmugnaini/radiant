@@ -43,13 +43,15 @@ fn write_image(filepath: &str, lines: &Line, progress_style: ProgressStyle) {
             let write_progress = ProgressBar::new(lines.len() as u64);
             write_progress.set_style(progress_style);
 
-            // Write pixel to ppm file
-            for (r, g, b) in lines.iter().rev().progress_with(write_progress) {
-                if let Err(we) = writeln!(f, "{} {} {}", r, g, b) {
-                    write_error(we);
-                };
+            let string_pixels: Vec<String> = lines
+                .iter()
+                .map(|rgb| format!("{} {} {}", rgb.0, rgb.1, rgb.2))
+                .collect();
+
+            match f.write_all(string_pixels.join("\n").as_bytes()) {
+                Ok(()) => eprintln!("=> Successfully written!"),
+                Err(we) => panic!("Unable to write to {}: {}", filepath, we),
             }
-            eprintln!("=> Successfully written!");
         }
         Err(create_err) => {
             panic!("Unable to create file {}: {}", filepath, create_err);

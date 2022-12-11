@@ -170,6 +170,7 @@ name = "radiant"
 version = "0.1.0"
 dependencies = [
  "indicatif",
+ "num_cpus",
  "rand",
  "rayon",
 ]
