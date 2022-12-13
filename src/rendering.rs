@@ -8,10 +8,7 @@ use crate::{
     surf_list::SurfList,
     vec3::Vec3,
 };
-use indicatif::{
-    HumanDuration, ParallelProgressIterator, ProgressBar, ProgressIterator,
-    ProgressStyle,
-};
+use indicatif::{HumanDuration, ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{fs::File, io::Write, process::Command, time::Instant};
 
@@ -25,9 +22,8 @@ fn write_image(filepath: &str, lines: &Line, progress_style: ProgressStyle) {
     // Write file
     match file {
         Ok(mut f) => {
-            let write_error = |we: std::io::Error| {
-                panic!("Unable to write to {}: {}", filepath, we)
-            };
+            let write_error =
+                |we: std::io::Error| panic!("Unable to write to {}: {}", filepath, we);
 
             // ppm file header
             if let Err(we) = write!(
@@ -81,8 +77,7 @@ fn ray_color(ray: Ray, world: &SurfList, depth: i32) -> Color {
         } else {
             let unit_dir = ray.direction().unit();
             let t = 0.5 * (unit_dir.y() + 1.0);
-            Color::new(1.0, 1.0, 1.0) * (1.0 - t) as f32
-                + Color::new(0.5, 0.7, 1.0) * t as f32
+            Color::new(1.0, 1.0, 1.0) * (1.0 - t) as f32 + Color::new(0.5, 0.7, 1.0) * t as f32
         }
     }
 }
@@ -175,20 +170,13 @@ pub fn easy_scene() -> SurfList {
     world
 }
 
-pub fn render_line(
-    camera: &Camera,
-    world: &SurfList,
-    line_number: usize,
-    line: &mut Line,
-) {
+pub fn render_line(camera: &Camera, world: &SurfList, line_number: usize, line: &mut Line) {
     for (index, pixel) in line.iter_mut().rev().enumerate() {
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         // Antialiasing process for each pixel
         for _ in 0..camera::SAMPLES_PER_PIXEL {
-            let u = (index as f64 + misc::rand())
-                / (camera::IMAGE_WIDTH - 1) as f64;
-            let v = (line_number as f64 + misc::rand())
-                / (camera::IMAGE_HEIGHT - 1) as f64;
+            let u = (index as f64 + misc::rand()) / (camera::IMAGE_WIDTH - 1) as f64;
+            let v = (line_number as f64 + misc::rand()) / (camera::IMAGE_HEIGHT - 1) as f64;
             let r = camera.get_ray(u, v);
             pixel_color += ray_color(r, world, camera::MAX_DEPTH);
         }

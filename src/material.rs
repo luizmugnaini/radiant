@@ -2,8 +2,7 @@ use crate::{color::Color, misc, ray::Ray, surf::HitRecord, vec3::Vec3};
 
 pub trait Scatterable {
     // How the ray interacts with the material
-    fn scatter(&self, ray: Ray, hit_record: HitRecord)
-        -> Option<(Ray, Color)>;
+    fn scatter(&self, ray: Ray, hit_record: HitRecord) -> Option<(Ray, Color)>;
 }
 
 #[derive(Clone, Copy)]

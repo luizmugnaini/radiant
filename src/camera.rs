@@ -2,10 +2,10 @@ use crate::{misc, ray::Ray, vec3::Vec3};
 
 // Image constants
 pub const ASPECT_RATIO: f64 = 3.0 / 2.0; // 16.0 / 9.0
-pub const IMAGE_WIDTH: i32 = 1200; // 400
-pub const IMAGE_HEIGHT: i32 = (1200.0 * 2.0 / 3.0) as i32; // img_width / asp_ratio
-pub const SAMPLES_PER_PIXEL: i32 = 200; // 100
-pub const MAX_DEPTH: i32 = 50; // 50
+pub const IMAGE_WIDTH: i32 = 400; // 400
+pub const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f32 * 2.0 / 3.0) as i32; // img_width / asp_ratio
+pub const SAMPLES_PER_PIXEL: i32 = 100;
+pub const MAX_DEPTH: i32 = 30;
 
 pub struct Camera {
     pub aspect_ratio: f64,
@@ -48,8 +48,7 @@ impl Camera {
         let origin = lookfrom;
         let horizontal = u * viewport_width * focus_dist;
         let vertical = v * viewport_height * focus_dist;
-        let lower_left_corner =
-            origin - horizontal / 2.0 - vertical / 2.0 - w * focus_dist;
+        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - w * focus_dist;
 
         let lens_radius = aperture / 2.0;
 
@@ -72,9 +71,7 @@ impl Camera {
         let offset = self.ortho_basis.1 * rd.x() + self.ortho_basis.2 * rd.y();
         Ray::new(
             self.origin + offset,
-            self.lower_left_corner + self.horizontal * u + self.vertical * v
-                - self.origin
-                - offset,
+            self.lower_left_corner + self.horizontal * u + self.vertical * v - self.origin - offset,
         )
     }
 }

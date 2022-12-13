@@ -1,10 +1,7 @@
 use crate::misc;
 use std::{
     iter::{IntoIterator, Iterator},
-    ops::{
-        Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg,
-        Sub,
-    },
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub},
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -16,11 +13,7 @@ pub struct Vec3<T> {
 
 impl<T> Vec3<T>
 where
-    T: Copy
-        + Mul<Output = T>
-        + Add<Output = T>
-        + Sub<Output = T>
-        + Div<Output = T>,
+    T: Copy + Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Div<Output = T>,
 {
     /// New vector
     pub fn new(x: T, y: T, z: T) -> Vec3<T> {
@@ -83,10 +76,9 @@ impl Vec3<f64> {
 
     pub fn refract(&self, normal: &Self, index_refrac_ratio: f64) -> Self {
         let cos_theta = f64::min(-self.dot(normal), 1.0);
-        let refrac_perpendicular =
-            (*self + *normal * cos_theta) * index_refrac_ratio;
-        let refrac_parallel = -*normal
-            * f64::sqrt(f64::abs(1.0 - refrac_perpendicular.len_squared()));
+        let refrac_perpendicular = (*self + *normal * cos_theta) * index_refrac_ratio;
+        let refrac_parallel =
+            -*normal * f64::sqrt(f64::abs(1.0 - refrac_perpendicular.len_squared()));
         refrac_perpendicular + refrac_parallel
     }
 
@@ -132,11 +124,7 @@ impl Vec3<f64> {
 
     pub fn random_in_unit_disk() -> Self {
         loop {
-            let point = Vec3::new(
-                misc::rand_on(-1.0, 1.0),
-                misc::rand_on(-1.0, 1.0),
-                0.0,
-            );
+            let point = Vec3::new(misc::rand_on(-1.0, 1.0), misc::rand_on(-1.0, 1.0), 0.0);
             if point.len_squared() >= 1.0 {
                 continue;
             } else {

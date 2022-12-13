@@ -60,13 +60,7 @@ impl Default for HitRecord {
 }
 
 pub trait Surface {
-    fn hit(
-        &self,
-        ray: &Ray,
-        t_min: f64,
-        t_max: f64,
-        rec: &mut HitRecord,
-    ) -> bool;
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
 }
 
 #[derive(Clone, Copy)]
@@ -87,13 +81,7 @@ impl Sphere {
 }
 
 impl Surface for Sphere {
-    fn hit(
-        &self,
-        ray: &Ray,
-        t_min: f64,
-        t_max: f64,
-        rec: &mut HitRecord,
-    ) -> bool {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
         let oc: Vec3<f64> = ray.origin() - self.center;
         let a = ray.direction().dot(&ray.direction());
         let half_b = oc.dot(&ray.direction());
@@ -127,8 +115,7 @@ impl Surface for Sphere {
                 Some(r) => {
                     rec.parameter = r;
                     rec.point = ray.point_at(r);
-                    let outward_normal: Vec3<f64> =
-                        (rec.point - self.center) / self.radius;
+                    let outward_normal: Vec3<f64> = (rec.point - self.center) / self.radius;
                     rec.set_face_normal(ray, outward_normal);
                     rec.material = self.material;
                     true
