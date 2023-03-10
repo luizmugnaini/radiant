@@ -3,9 +3,9 @@ use radiant::{
     rendering,
     vec3::Vec3,
 };
-use std::{env, fs};
+use std::{env, fs, io::Result};
 
-fn check_output_dir(output: &str) -> std::io::Result<bool> {
+fn check_output_dir(output: &str) -> Result<bool> {
     let mut path = env::current_dir()?;
     path.push(output);
     let meta = fs::metadata(path)?;
