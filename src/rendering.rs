@@ -9,22 +9,19 @@ use crate::{
     vec3::Vec3,
 };
 use indicatif::{HumanDuration, ParallelProgressIterator, ProgressBar, ProgressStyle};
+use rand::Rng;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use std::{fs::File, io::Write, process::Command, time::Instant};
+use std::{fs::File, io::Write, path::PathBuf, process::Command, time::Instant};
 
 type Pixel = (u8, u8, u8);
-type Line = [Pixel];
+type Line = [Pixel; camera::IMAGE_WIDTH];
+type Image = [Pixel; camera::IMAGE_WIDTH * camera::IMAGE_HEIGHT];
 
-fn write_image(filepath: &str, lines: &Line, progress_style: ProgressStyle) {
+fn write_image(filepath: &str, lines: Image, progress_style: ProgressStyle) {
     eprintln!("=> Writing image to file: {filepath} ...");
-    let file = File::create(filepath);
-
     // Write file
-    match file {
+    match File::create(filepath) {
         Ok(mut f) => {
-            let write_error =
-                |we: std::io::Error| panic!("Unable to write to {}: {}", filepath, we);
-
             // ppm file header
             if let Err(we) = write!(
                 f,
@@ -32,7 +29,7 @@ fn write_image(filepath: &str, lines: &Line, progress_style: ProgressStyle) {
                 camera::IMAGE_WIDTH,
                 camera::IMAGE_HEIGHT
             ) {
-                write_error(we);
+                panic!("Unable to write to {}: {}", filepath, we);
             };
 
             // Writing progress bar
@@ -41,6 +38,7 @@ fn write_image(filepath: &str, lines: &Line, progress_style: ProgressStyle) {
 
             let string_pixels: Vec<String> = lines
                 .iter()
+                .rev()
                 .map(|rgb| format!("{} {} {}", rgb.0, rgb.1, rgb.2))
                 .collect();
 
@@ -95,25 +93,27 @@ fn random_scene() -> SurfList {
         ground_material,
     ));
 
+    let mut rng = rand::thread_rng();
+
     // Random spheres
     for a in -11..11 {
         for b in -11..11 {
             let choose_material = misc::rand();
             let center = Vec3::new(
-                a as f64 + 0.9 * misc::rand(),
+                a as f32 + 0.9 * misc::rand(),
                 0.2,
-                b as f64 + 0.9 * misc::rand(),
+                b as f32 + 0.9 * misc::rand(),
             );
 
             if (center - Vec3::new(4.0, 0.2, 0.0)).len() > 0.9 {
                 let sphere_material = if choose_material < 0.8 {
                     // Lambertian
-                    let albedo = Color::rand() * Color::rand();
+                    let albedo = Color::rand(&mut rng) * Color::rand(&mut rng);
                     Material::lambertian(albedo)
                 } else if choose_material < 0.95 {
                     // Metal
-                    let albedo = Color::rand_on(0.5, 1.0);
-                    let fuzz = misc::rand_on(0.0, 0.5);
+                    let albedo = Color::rand_on(&mut rng, 0.5, 1.0);
+                    let fuzz = rng.gen_range(0.0..0.5);
                     Material::metal(albedo, fuzz)
                 } else {
                     // Glass
@@ -170,13 +170,13 @@ pub fn easy_scene() -> SurfList {
     world
 }
 
-pub fn render_line(camera: &Camera, world: &SurfList, line_number: usize, line: &mut Line) {
+pub fn render_line(camera: &Camera, world: &SurfList, line_number: usize, line: &mut [Pixel]) {
     for (index, pixel) in line.iter_mut().rev().enumerate() {
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         // Antialiasing process for each pixel
         for _ in 0..camera::SAMPLES_PER_PIXEL {
-            let u = (index as f64 + misc::rand()) / (camera::IMAGE_WIDTH - 1) as f64;
-            let v = (line_number as f64 + misc::rand()) / (camera::IMAGE_HEIGHT - 1) as f64;
+            let u = (index as f32 + misc::rand()) / (camera::IMAGE_WIDTH - 1) as f32;
+            let v = (line_number as f32 + misc::rand()) / (camera::IMAGE_HEIGHT - 1) as f32;
             let r = camera.get_ray(u, v);
             pixel_color += ray_color(r, world, camera::MAX_DEPTH);
         }
@@ -185,7 +185,7 @@ pub fn render_line(camera: &Camera, world: &SurfList, line_number: usize, line: 
     }
 }
 
-pub fn render(filepath: &str, camera: Camera, scene: &str) {
+pub fn render(output_path: PathBuf, camera: Camera, scene: &str) {
     let started = Instant::now();
 
     // World where the objects exist
@@ -207,9 +207,11 @@ pub fn render(filepath: &str, camera: Camera, scene: &str) {
     progress_lines.set_style(progress_style.clone());
 
     // Array containing all pixels from the image
-    let mut pixels: Vec<Pixel> =
-        vec![(0, 0, 0); (camera::IMAGE_HEIGHT * camera::IMAGE_WIDTH) as usize];
-    let lines: Vec<(usize, &mut Line)> = pixels
+    let mut pixels: [Pixel; camera::IMAGE_HEIGHT * camera::IMAGE_WIDTH] =
+        [(0, 0, 0); camera::IMAGE_HEIGHT * camera::IMAGE_WIDTH];
+
+    // Split the whole image into lines (with the width size) and enumerate them.
+    let lines: Vec<(usize, &mut [Pixel])> = pixels
         .chunks_mut(camera::IMAGE_WIDTH as usize)
         .enumerate()
         .collect();
@@ -223,7 +225,7 @@ pub fn render(filepath: &str, camera: Camera, scene: &str) {
     progress_lines.finish_with_message("=> Finished renderization!");
 
     // Write image to file
-    write_image(filepath, &pixels, progress_style);
+    write_image(output_path, pixels, progress_style);
 
     eprintln!("Done in {}!", HumanDuration(started.elapsed()));
 }

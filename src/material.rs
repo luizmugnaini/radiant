@@ -1,4 +1,5 @@
 use crate::{color::Color, misc, ray::Ray, surf::HitRecord, vec3::Vec3};
+use rand;
 
 pub trait Scatterable {
     // How the ray interacts with the material
@@ -29,11 +30,11 @@ impl Material {
         Self::Lambertian(Lambertian::new(albedo))
     }
 
-    pub fn metal(albedo: Color, fuzz: f64) -> Self {
+    pub fn metal(albedo: Color, fuzz: f32) -> Self {
         Self::Metal(Metal::new(albedo, fuzz))
     }
 
-    pub fn dielectric(index_refraction: f64) -> Self {
+    pub fn dielectric(index_refraction: f32) -> Self {
         Self::Dielectric(Dielectric::new(index_refraction))
     }
 }
@@ -51,7 +52,7 @@ impl Lambertian {
 
 impl Scatterable for Lambertian {
     fn scatter(&self, _ray: Ray, rec: HitRecord) -> Option<(Ray, Color)> {
-        let mut direction = rec.normal() + Vec3::random_unit_vector();
+        let mut direction = rec.normal() + Vec3::random_unit_vector(&mut rand::thread_rng());
         // Degenerate scatter direction
         if direction.near_zero() {
             direction = rec.normal();
@@ -64,11 +65,11 @@ impl Scatterable for Lambertian {
 #[derive(Clone, Copy)]
 pub struct Metal {
     albedo: Color,
-    fuzz: f64,
+    fuzz: f32,
 }
 
 impl Metal {
-    fn new(albedo: Color, fuzz_: f64) -> Self {
+    fn new(albedo: Color, fuzz_: f32) -> Self {
         let fuzz = if fuzz_ < 1.0 { fuzz_ } else { 1.0 };
         Self { albedo, fuzz }
     }
@@ -79,7 +80,7 @@ impl Scatterable for Metal {
         let reflected = ray.direction().unit_vector().reflect(&rec.normal());
         let scattered = Ray::new(
             rec.point(),
-            reflected + Vec3::random_unit_sphere() * self.fuzz,
+            reflected + Vec3::random_unit_sphere(&mut rand::thread_rng()) * self.fuzz,
         );
 
         if scattered.direction().dot(&rec.normal()) > 0.0 {
@@ -91,15 +92,15 @@ impl Scatterable for Metal {
 
 #[derive(Clone, Copy)]
 pub struct Dielectric {
-    index_refraction: f64,
+    index_refraction: f32,
 }
 
 impl Dielectric {
-    fn new(index_refraction: f64) -> Self {
+    fn new(index_refraction: f32) -> Self {
         Self { index_refraction }
     }
 
-    fn reflectance(cos: f64, refraction_ratio: f64) -> f64 {
+    fn reflectance(cos: f32, refraction_ratio: f32) -> f32 {
         let mut r0 = (1.0 - refraction_ratio) / (1.0 + refraction_ratio);
         r0 = r0 * r0;
         r0 + (1.0 - r0) * (1.0 - cos).powi(5)
@@ -117,8 +118,8 @@ impl Scatterable for Dielectric {
 
         // Decide whether the incoming `ray` reflects or refracts
         let unit_direction = ray.direction().unit_vector();
-        let cos_theta = f64::min(-unit_direction.dot(&rec.normal()), 1.0);
-        let sin_theta = f64::sqrt(1.0 - cos_theta * cos_theta);
+        let cos_theta = f32::min(-unit_direction.dot(&rec.normal()), 1.0);
+        let sin_theta = f32::sqrt(1.0 - cos_theta * cos_theta);
         let direction = if refraction_ratio * sin_theta > 1.0
             || Self::reflectance(cos_theta, refraction_ratio) > misc::rand()
         {

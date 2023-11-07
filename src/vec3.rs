@@ -1,3 +1,5 @@
+use rand::{rngs::ThreadRng, Rng};
+
 use crate::misc;
 use std::{
     iter::{IntoIterator, Iterator},
@@ -52,8 +54,8 @@ where
     }
 }
 
-impl Vec3<f64> {
-    pub fn len(&self) -> f64 {
+impl Vec3<f32> {
+    pub fn len(&self) -> f32 {
         self.dot(self).sqrt()
     }
 
@@ -67,18 +69,18 @@ impl Vec3<f64> {
     }
 
     pub fn near_zero(&self) -> bool {
-        self.x < f64::EPSILON && self.y < f64::EPSILON && self.z < f64::EPSILON
+        self.x < f32::EPSILON && self.y < f32::EPSILON && self.z < f32::EPSILON
     }
 
     pub fn reflect(&self, normal: &Self) -> Self {
         *self - (*normal * self.dot(normal) * 2.0)
     }
 
-    pub fn refract(&self, normal: &Self, index_refrac_ratio: f64) -> Self {
-        let cos_theta = f64::min(-self.dot(normal), 1.0);
+    pub fn refract(&self, normal: &Self, index_refrac_ratio: f32) -> Self {
+        let cos_theta = f32::min(-self.dot(normal), 1.0);
         let refrac_perpendicular = (*self + *normal * cos_theta) * index_refrac_ratio;
         let refrac_parallel =
-            -*normal * f64::sqrt(f64::abs(1.0 - refrac_perpendicular.len_squared()));
+            -*normal * f32::sqrt(f32::abs(1.0 - refrac_perpendicular.len_squared()));
         refrac_perpendicular + refrac_parallel
     }
 
@@ -86,18 +88,18 @@ impl Vec3<f64> {
         Self::new(misc::rand(), misc::rand(), misc::rand())
     }
 
-    pub fn random_on(min: f64, max: f64) -> Self {
+    pub fn random_on(rng: &mut ThreadRng, min: f32, max: f32) -> Self {
         Self::new(
-            misc::rand_on(min, max),
-            misc::rand_on(min, max),
-            misc::rand_on(min, max),
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
+            rng.gen_range(min..max),
         )
     }
 
     // Hacky incorrect method for diffusion
-    pub fn random_unit_sphere() -> Self {
+    pub fn random_unit_sphere(rng: &mut ThreadRng) -> Self {
         loop {
-            let rand = Self::random_on(-1.0, 1.0);
+            let rand = Self::random_on(rng, -1.0, 1.0);
             if rand.len_squared() > 1.0 {
                 continue;
             } else {
@@ -107,13 +109,13 @@ impl Vec3<f64> {
     }
 
     // Lambertian diffusion method
-    pub fn random_unit_vector() -> Self {
-        Self::random_unit_sphere().unit_vector()
+    pub fn random_unit_vector(rng: &mut ThreadRng) -> Self {
+        Self::random_unit_sphere(rng).unit_vector()
     }
 
     // Another approach for diffusion
-    pub fn random_in_hemisphere(normal: Self) -> Self {
-        let v = Self::random_unit_sphere();
+    pub fn random_in_hemisphere(rng: &mut ThreadRng, normal: Self) -> Self {
+        let v = Self::random_unit_sphere(rng);
         // If `v` is in the same side as the `normal`, return it
         if v.dot(&normal) > 0.0 {
             v
@@ -122,9 +124,9 @@ impl Vec3<f64> {
         }
     }
 
-    pub fn random_in_unit_disk() -> Self {
+    pub fn random_in_unit_disk(rng: &mut ThreadRng) -> Self {
         loop {
-            let point = Vec3::new(misc::rand_on(-1.0, 1.0), misc::rand_on(-1.0, 1.0), 0.0);
+            let point = Vec3::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
             if point.len_squared() >= 1.0 {
                 continue;
             } else {

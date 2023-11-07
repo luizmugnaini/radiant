@@ -1,4 +1,5 @@
 use crate::{camera, misc};
+use rand::{rngs::ThreadRng, Rng};
 use std::{
     fmt::{self, Display},
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign},
@@ -16,28 +17,28 @@ impl Color {
         Self { r, g, b }
     }
 
-    pub fn rand() -> Self {
+    pub fn rand(rng: &mut ThreadRng) -> Self {
         Self {
-            r: misc::rand() as f32,
-            g: misc::rand() as f32,
-            b: misc::rand() as f32,
+            r: rng.gen(),
+            g: rng.gen(),
+            b: rng.gen(),
         }
     }
 
-    pub fn rand_on(min: f64, max: f64) -> Self {
+    pub fn rand_on(rng: &mut ThreadRng, min: f32, max: f32) -> Self {
         Self {
-            r: misc::rand_on(min, max) as f32,
-            g: misc::rand_on(min, max) as f32,
-            b: misc::rand_on(min, max) as f32,
+            r: rng.gen_range(min..max),
+            g: rng.gen_range(min..max),
+            b: rng.gen_range(min..max),
         }
     }
 
     pub fn rgb(self) -> (u8, u8, u8) {
         // Gamma correction for gamma = 2.0
         let scale = 1.0 / camera::SAMPLES_PER_PIXEL as f32;
-        let r = misc::clamp(f32::sqrt(self.r * scale), 0.0, 0.999);
-        let g = misc::clamp(f32::sqrt(self.g * scale), 0.0, 0.999);
-        let b = misc::clamp(f32::sqrt(self.b * scale), 0.0, 0.999);
+        let r = (f32::sqrt(self.r * scale)).clamp(0.0, 0.999);
+        let g = (f32::sqrt(self.g * scale)).clamp(0.0, 0.999);
+        let b = (f32::sqrt(self.b * scale)).clamp(0.0, 0.999);
 
         // Translated colors to the interval [0, 255]
         ((256.0 * r) as u8, (256.0 * g) as u8, (256.0 * b) as u8)

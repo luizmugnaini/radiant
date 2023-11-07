@@ -2,24 +2,24 @@ use crate::vec3::Vec3;
 
 #[derive(Debug)]
 pub struct Ray {
-    origin: Vec3<f64>,
-    dir: Vec3<f64>,
+    origin: Vec3<f32>,
+    dir: Vec3<f32>,
 }
 
 impl Ray {
-    pub fn new(origin: Vec3<f64>, dir: Vec3<f64>) -> Ray {
+    pub fn new(origin: Vec3<f32>, dir: Vec3<f32>) -> Ray {
         Self { origin, dir }
     }
 
-    pub fn origin(&self) -> Vec3<f64> {
+    pub fn origin(&self) -> Vec3<f32> {
         self.origin
     }
 
-    pub fn direction(&self) -> Vec3<f64> {
+    pub fn direction(&self) -> Vec3<f32> {
         self.dir
     }
 
-    pub fn point_at(&self, p: f64) -> Vec3<f64> {
+    pub fn point_at(&self, p: f32) -> Vec3<f32> {
         self.origin + self.dir * p
     }
 }
