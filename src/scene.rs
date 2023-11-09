@@ -14,6 +14,25 @@ pub enum SceneType {
     Complex,
 }
 
+impl SceneType {
+    pub fn from(scene_name: &str) -> Self {
+        match scene_name {
+            "basic" => Self::Basic,
+            "complex" => Self::Complex,
+            _ => {
+                misc::log(
+                    LogLevel::Fatal,
+                    &format!(
+                        "Scene name {} not available [options: basic, complex].",
+                        scene_name
+                    ),
+                );
+                std::process::exit(-1);
+            }
+        }
+    }
+}
+
 fn complex_scene() -> SurfList {
     misc::log(LogLevel::Info, "Creating complex scene");
     let mut world = SurfList::new();
@@ -103,7 +122,7 @@ fn basic_scene() -> SurfList {
     world
 }
 
-pub fn make_scene(scene_type: &SceneType) -> SurfList {
+pub fn make_scene(scene_type: SceneType) -> SurfList {
     match scene_type {
         SceneType::Basic => basic_scene(),
         SceneType::Complex => complex_scene(),

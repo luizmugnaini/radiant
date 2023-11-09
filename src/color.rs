@@ -1,4 +1,5 @@
 use crate::camera;
+use image::Rgb;
 use rand::{rngs::ThreadRng, Rng};
 use std::{
     fmt::{self, Display},
@@ -33,7 +34,7 @@ impl Color {
         }
     }
 
-    pub fn rgb(self) -> (u8, u8, u8) {
+    pub fn rgb(self) -> Rgb<u8> {
         // Gamma correction for gamma = 2.0
         let scale = 1.0 / camera::SAMPLES_PER_PIXEL as f32;
         let r = (f32::sqrt(self.r * scale)).clamp(0.0, 0.999);
@@ -41,7 +42,17 @@ impl Color {
         let b = (f32::sqrt(self.b * scale)).clamp(0.0, 0.999);
 
         // Translated colors to the interval [0, 255]
-        ((256.0 * r) as u8, (256.0 * g) as u8, (256.0 * b) as u8)
+        Rgb::from([(256.0 * r) as u8, (256.0 * g) as u8, (256.0 * b) as u8])
+    }
+}
+
+impl Default for Color {
+    fn default() -> Self {
+        Self {
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+        }
     }
 }
 
