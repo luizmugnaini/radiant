@@ -1,66 +1,84 @@
 use crate::{
     camera::{self, Camera},
     color::Color,
-    material::Material,
-    misc,
+    misc::{self, LogLevel},
     ray::Ray,
-    surf::{HitRecord, Sphere},
+    scene::{self, SceneType},
+    surf::HitRecord,
     surf_list::SurfList,
-    vec3::Vec3,
 };
 use indicatif::{HumanDuration, ParallelProgressIterator, ProgressBar, ProgressStyle};
-use rand::Rng;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{fs::File, io::Write, path::PathBuf, process::Command, time::Instant};
 
 type Pixel = (u8, u8, u8);
-type Line = [Pixel; camera::IMAGE_WIDTH];
 type Image = [Pixel; camera::IMAGE_WIDTH * camera::IMAGE_HEIGHT];
 
-fn write_image(filepath: &str, lines: Image, progress_style: ProgressStyle) {
-    eprintln!("=> Writing image to file: {filepath} ...");
-    // Write file
-    match File::create(filepath) {
-        Ok(mut f) => {
-            // ppm file header
-            if let Err(we) = write!(
-                f,
-                "P3\n{} {}\n255\n",
-                camera::IMAGE_WIDTH,
-                camera::IMAGE_HEIGHT
-            ) {
-                panic!("Unable to write to {}: {}", filepath, we);
-            };
+fn write_to_ppm_format(mut file: File, lines: Image, progress_style: ProgressStyle) {
+    // ppm file header
+    if let Err(write_err) = write!(
+        file,
+        "P3\n{} {}\n255\n",
+        camera::IMAGE_WIDTH,
+        camera::IMAGE_HEIGHT
+    ) {
+        misc::log(
+            LogLevel::Fatal,
+            &format!("Unable to write ppm header due to {}", write_err),
+        );
+        std::process::exit(-1);
+    };
 
-            // Writing progress bar
-            let write_progress = ProgressBar::new(lines.len() as u64);
-            write_progress.set_style(progress_style);
+    // Writing progress bar
+    let write_progress = ProgressBar::new(lines.len() as u64);
+    write_progress.set_style(progress_style);
 
-            let string_pixels: Vec<String> = lines
-                .iter()
-                .rev()
-                .map(|rgb| format!("{} {} {}", rgb.0, rgb.1, rgb.2))
-                .collect();
+    let string_pixels: Vec<String> = lines
+        .iter()
+        .rev()
+        .map(|rgb| format!("{} {} {}", rgb.0, rgb.1, rgb.2))
+        .collect();
 
-            match f.write_all(string_pixels.join("\n").as_bytes()) {
-                Ok(()) => eprintln!("=> Successfully written!"),
-                Err(we) => panic!("Unable to write to {}: {}", filepath, we),
-            }
+    match file.write_all(string_pixels.join("\n").as_bytes()) {
+        Ok(()) => misc::log(LogLevel::Info, "Successfully written to file!"),
+        Err(write_err) => {
+            misc::log(
+                LogLevel::Fatal,
+                &format!("Unable to write to file due to {}", write_err),
+            );
+            std::process::exit(-1);
         }
+    }
+}
+
+fn write_image(filepath: PathBuf, lines: Image, progress_style: ProgressStyle) {
+    misc::log(
+        LogLevel::Info,
+        &format!("Writing image to {}", filepath.as_path().display()),
+    );
+    // Write file
+    match File::create(&filepath) {
+        Ok(file) => write_to_ppm_format(file, lines, progress_style),
         Err(create_err) => {
-            panic!("Unable to create file {}: {}", filepath, create_err);
+            misc::log(
+                LogLevel::Fatal,
+                &format!("Unable to create output file due to {}", create_err),
+            );
+            std::process::exit(-1);
         }
     }
 
-    // Open file for visualization
     if let Err(e) = Command::new("xdg-open").arg(filepath).spawn() {
-        eprintln!("=> Error: xdg-open failed to execute, {}", e);
+        misc::log(
+            LogLevel::Error,
+            &format!("xdg-open failed to execute, {}", e),
+        );
     }
 }
 
 fn ray_color(ray: Ray, world: &SurfList, depth: i32) -> Color {
     if depth <= 0 {
-        // Exceded maximum number of bounces, considers that the location is
+        // Exceeded maximum number of bounces, considers that the location is
         // near a shadow, so it returns a black pixel
         Color::new(0.0, 0.0, 0.0)
     } else {
@@ -80,96 +98,6 @@ fn ray_color(ray: Ray, world: &SurfList, depth: i32) -> Color {
     }
 }
 
-#[allow(dead_code)]
-fn random_scene() -> SurfList {
-    eprintln!("=> Creating random scene...");
-    let mut world = SurfList::new();
-
-    // Ground
-    let ground_material = Material::lambertian(Color::new(0.5, 0.5, 0.5));
-    world.add(Sphere::new(
-        Vec3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        ground_material,
-    ));
-
-    let mut rng = rand::thread_rng();
-
-    // Random spheres
-    for a in -11..11 {
-        for b in -11..11 {
-            let choose_material = misc::rand();
-            let center = Vec3::new(
-                a as f32 + 0.9 * misc::rand(),
-                0.2,
-                b as f32 + 0.9 * misc::rand(),
-            );
-
-            if (center - Vec3::new(4.0, 0.2, 0.0)).len() > 0.9 {
-                let sphere_material = if choose_material < 0.8 {
-                    // Lambertian
-                    let albedo = Color::rand(&mut rng) * Color::rand(&mut rng);
-                    Material::lambertian(albedo)
-                } else if choose_material < 0.95 {
-                    // Metal
-                    let albedo = Color::rand_on(&mut rng, 0.5, 1.0);
-                    let fuzz = rng.gen_range(0.0..0.5);
-                    Material::metal(albedo, fuzz)
-                } else {
-                    // Glass
-                    Material::dielectric(1.5)
-                };
-
-                world.add(Sphere::new(center, 0.2, sphere_material));
-            }
-        }
-    }
-
-    // Standard spheres to all scenes
-    world.add(Sphere::new(
-        Vec3::new(0.0, 1.0, 0.0),
-        1.0,
-        Material::dielectric(1.5),
-    ));
-    world.add(Sphere::new(
-        Vec3::new(-4.0, 1.0, 0.0),
-        1.0,
-        Material::lambertian(Color::new(0.4, 0.2, 0.1)),
-    ));
-    world.add(Sphere::new(
-        Vec3::new(4.0, 1.0, 0.0),
-        1.0,
-        Material::metal(Color::new(0.7, 0.6, 0.5), 0.0),
-    ));
-
-    world
-}
-
-pub fn easy_scene() -> SurfList {
-    eprintln!("=> Creating easy scene...");
-    let material_ground = Material::lambertian(Color::new(0.8, 0.8, 0.0));
-    let material_center = Material::lambertian(Color::new(0.1, 0.2, 0.5));
-    let material_left = Material::dielectric(1.5);
-    let material_right = Material::metal(Color::new(0.8, 0.6, 0.2), 0.0);
-
-    let mut world = SurfList::new();
-    world.add(Sphere::new(
-        Vec3::new(0.0, -100.5, -1.0),
-        100.0,
-        material_ground,
-    ));
-    world.add(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5, material_center));
-    world.add(Sphere::new(Vec3::new(-1.0, 0.0, -1.0), 0.5, material_left));
-    world.add(Sphere::new(
-        Vec3::new(-1.0, 0.0, -1.0),
-        -0.45,
-        material_left,
-    ));
-    world.add(Sphere::new(Vec3::new(1.0, 0.0, -1.0), 0.5, material_right));
-
-    world
-}
-
 pub fn render_line(camera: &Camera, world: &SurfList, line_number: usize, line: &mut [Pixel]) {
     for (index, pixel) in line.iter_mut().rev().enumerate() {
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
@@ -185,17 +113,11 @@ pub fn render_line(camera: &Camera, world: &SurfList, line_number: usize, line: 
     }
 }
 
-pub fn render(output_path: PathBuf, camera: Camera, scene: &str) {
+pub fn render(output_path: PathBuf, camera: Camera, scene_type: &SceneType) {
     let started = Instant::now();
 
-    // World where the objects exist
-    let world = match scene {
-        "random" => random_scene(),
-        "easy" => easy_scene(),
-        s => panic!("{} not avaliable. Scenes: \"random\" and \"easy\"", s),
-    };
+    let world = scene::make_scene(scene_type);
 
-    // Progress bar for the line rendering
     let progress_style = ProgressStyle::default_bar()
         .template(concat!(
             "{spinner:.green} [{pos:>3}/{len:3}] ",
@@ -216,16 +138,18 @@ pub fn render(output_path: PathBuf, camera: Camera, scene: &str) {
         .enumerate()
         .collect();
 
-    // Parallel renderization of the image lines
-    eprintln!("=> Image renderization...");
+    misc::log(LogLevel::Info, "Starting parallel image renderization...");
     lines
         .into_par_iter()
         .progress_with(progress_lines.clone())
         .for_each(|(i, l)| render_line(&camera, &world, i, l));
-    progress_lines.finish_with_message("=> Finished renderization!");
+    progress_lines.finish_with_message("Finished renderization!");
 
     // Write image to file
     write_image(output_path, pixels, progress_style);
 
-    eprintln!("Done in {}!", HumanDuration(started.elapsed()));
+    misc::log(
+        LogLevel::Info,
+        &format!("Done in {}!", HumanDuration(started.elapsed())),
+    );
 }

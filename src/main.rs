@@ -1,40 +1,58 @@
+use clap::{Arg, Command};
 use radiant::{
     camera::{self, Camera},
-    rendering,
+    misc::{self, LogLevel},
+    rendering, scene,
     vec3::Vec3,
 };
-use std::{env, fs, io::Result};
-
-fn check_output_dir(output: &str) -> Result<bool> {
-    let mut path = env::current_dir()?;
-    path.push(output);
-    let meta = fs::metadata(path)?;
-    Ok(meta.is_dir())
-}
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        panic!("File name path is needed!");
-    }
+    let matches = Command::new("radiant")
+        .arg(
+            Arg::new("outdir")
+                .short('o')
+                .default_value("./output")
+                .help("Output directory path."),
+        )
+        .arg(
+            Arg::new("filename")
+                .short('n')
+                .default_value("out")
+                .help("Output file name, without extensions."),
+        )
+        .arg(
+            Arg::new("format")
+                .short('f')
+                .value_parser(["ppm", "png"])
+                .default_value("ppm")
+                .help("Output file format."),
+        )
+        .arg(
+            Arg::new("scene")
+                .short('s')
+                .value_parser(clap::value_parser!(scene::SceneType))
+                .default_value("basic")
+                .help("Use a default scene."),
+        )
+        .get_matches();
 
-    // File path operations
-    let create_out = || {
-        if let Err(e) = fs::create_dir("output") {
-            panic!("Unable to create directory output: {}", e);
+    let path = Path::new(matches.get_one::<String>("outdir").unwrap());
+    if !path.is_dir() {
+        if let Err(e) = fs::create_dir(path) {
+            misc::log(
+                LogLevel::Fatal,
+                &format!("Unable to create output directory due to error {}", e),
+            );
+            std::process::exit(-1);
         }
-    };
-    match check_output_dir("output") {
-        Ok(b) => {
-            if !b {
-                create_out();
-            }
-        }
-        Err(_) => create_out(),
     }
-    let mut filepath = String::from(args[1].as_str());
-    filepath.push_str(".ppm");
-    filepath.insert_str(0, "output/");
+    let mut path: PathBuf = path.to_path_buf();
+    path.set_file_name(matches.get_one::<String>("filename").unwrap());
+    path.set_extension(matches.get_one::<String>("format").unwrap());
 
     // Create a camera
     let lookfrom = Vec3::new(13.0, 2.0, 3.0);
@@ -52,5 +70,5 @@ fn main() {
         dist_to_focus,
     );
 
-    rendering::render(&filepath, camera, &args[2]);
+    rendering::render(path, camera, matches.get_one("scene").unwrap());
 }

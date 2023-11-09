@@ -4,6 +4,7 @@ pub mod material;
 pub mod misc;
 pub mod ray;
 pub mod rendering;
+pub mod scene;
 pub mod surf;
 pub mod surf_list;
 pub mod vec3;

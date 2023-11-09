@@ -31,13 +31,20 @@ pub fn rand_on(min: f32, max: f32) -> f32 {
     rand::thread_rng().gen_range(min..max)
 }
 
-// Clamps a number into the interval `min..max`
-pub fn clamp(x: f32, min: f32, max: f32) -> f32 {
-    if x < min {
-        min
-    } else if x < max {
-        x
-    } else {
-        max
+pub enum LogLevel {
+    Fatal,
+    Error,
+    Warning,
+    Info,
+    Debug,
+}
+
+pub fn log(level: LogLevel, msg: &str) {
+    match level {
+        LogLevel::Fatal => eprintln!("\x1b[1;41m[FATAL]\x1b[0m: {}", msg),
+        LogLevel::Error => eprintln!("\x1b[1;31m[ERROR]\x1b[0m: {}", msg),
+        LogLevel::Warning => eprintln!("\x1b[1;33m[WARNING]\x1b[0m: {}", msg),
+        LogLevel::Info => eprintln!("\x1b[1;32m[INFO]\x1b[0m: {}", msg),
+        LogLevel::Debug => eprintln!("\x1b[1;34m[DEBUG]\x1b[0m: {}", msg),
     }
 }

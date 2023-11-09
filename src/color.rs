@@ -1,4 +1,4 @@
-use crate::{camera, misc};
+use crate::camera;
 use rand::{rngs::ThreadRng, Rng};
 use std::{
     fmt::{self, Display},
