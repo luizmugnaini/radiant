@@ -25,7 +25,7 @@ fn main() {
             Arg::new("scene")
                 .short('s')
                 .default_value("basic")
-                .help("Use a default scene."),
+                .help("Use a default scene. Possible values are `basic` and `complex`."),
         )
         .get_matches();
 

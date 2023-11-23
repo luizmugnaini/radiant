@@ -1,7 +1,7 @@
 use crate::{
     camera::{self, Camera},
     color::Color,
-    misc,
+    misc::{self, LogLevel},
     ray::Ray,
     scene::{self, SceneType},
     surf::HitRecord,
@@ -14,47 +14,6 @@ use rayon::{
     slice::ParallelSliceMut,
 };
 use std::path::Path;
-
-/* type Pixel = (u8, u8, u8);
-type Image = [Pixel; camera::IMAGE_WIDTH * camera::IMAGE_HEIGHT];
-
-fn write_to_ppm_format(mut file: File, lines: Image, progress_style: ProgressStyle) {
-    // ppm file header
-    if let Err(write_err) = write!(
-        file,
-        "P3\n{} {}\n255\n",
-        camera::IMAGE_WIDTH,
-        camera::IMAGE_HEIGHT
-    ) {
-        misc::log(
-            LogLevel::Fatal,
-            &format!("Unable to write ppm header due to {}", write_err),
-        );
-        std::process::exit(-1);
-    };
-
-    // Writing progress bar
-    let write_progress = ProgressBar::new(lines.len() as u64);
-    write_progress.set_style(progress_style);
-
-    let string_pixels: Vec<String> = lines
-        .iter()
-        .rev()
-        .map(|rgb| format!("{} {} {}", rgb.0, rgb.1, rgb.2))
-        .collect();
-
-    match file.write_all(string_pixels.join("\n").as_bytes()) {
-        Ok(()) => misc::log(LogLevel::Info, "Successfully written to file!"),
-        Err(write_err) => {
-            misc::log(
-                LogLevel::Fatal,
-                &format!("Unable to write to file due to {}", write_err),
-            );
-            std::process::exit(-1);
-        }
-    }
-}
-*/
 
 fn ray_color(ray: Ray, world: &SurfList, depth: i32) -> Color {
     if depth <= 0 {

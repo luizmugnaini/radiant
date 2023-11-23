@@ -4,11 +4,11 @@ use crate::{misc, ray::Ray, vec3::Vec3};
 pub const ASPECT_RATIO: f32 = 16.0 / 9.0;
 
 /// Width of the displayed image.
-pub const IMAGE_WIDTH: usize = 400;
+pub const IMAGE_WIDTH: usize = 1024;
 
 /// Height of the displayed image. It is given by the image width divided by the
 /// aspect ratio.
-pub const IMAGE_HEIGHT: usize = 225; // (400.0 * 9.0 / 16.0) as i32;
+pub const IMAGE_HEIGHT: usize = 576; // (IMAGE_WIDTH * 9.0 / 16.0) as i32;
 
 /// Number of samples used per pixel in the process of aliasing.
 pub const SAMPLES_PER_PIXEL: i32 = 20;
