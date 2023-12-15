@@ -34,7 +34,7 @@ cargo run --release -- --scene=basic
 For a more interesting scene we can get the following result in about 20 seconds:
 
 ```
-cargo run --release -- --scene=basic
+cargo run --release -- --scene=complex
 ```
 
 ![Complex scene with 20 samples and 8 bounces](output/complex_20al_8b.png)
