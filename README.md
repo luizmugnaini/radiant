@@ -1,3 +1,10 @@
+# DISCLAIMER
+
+> This project is now hosted at https://git.sr.ht/~presheaf/radiant
+>
+> This repository will no longer be updated. Please refer to the new hosting
+> page for new development and contributions or contact me via e-mail.
+
 # A simple ray tracer
 
 This is my first time attempting a ray tracing renderer! This work is based on [_Ray Tracing in One
